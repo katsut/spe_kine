@@ -11,16 +11,22 @@
 [docker](https://docs.docker.com/docker-for-mac/)をインストールして起動しておく
 
 ```
-docker run -ti --rm -v "`pwd`/aerospike/src/conf:/opt/aerospike/etc/conf" -v "`pwd`/aerospike/data:/opt/aerospike/etc/data" --name aerospike -p 3000:3000 -p 3001:3001 -p 3002:3002 -p 3003:3003 aerospike/aerospike-server /usr/bin/asd --foreground --config-file /opt/aerospike/etc/conf/aerospike.conf
+export AEROSPIKE_CONF="`pwd`/src/aerospike/conf"
+export AEROSPIKE_DATA="`pwd`/data"
+docker run -ti --rm -v "${AEROSPIKE_CONF}:/opt/aerospike/etc/conf" -v "${AEROSPIKE_DATA}:/opt/aerospike/etc/data" --name aerospike -p 3000:3000 -p 3001:3001 -p 3002:3002 -p 3003:3003 aerospike/aerospike-server /usr/bin/asd --foreground --config-file /opt/aerospike/etc/conf/aerospike.conf
 ```
 
 ### aws kinesis stream applications run
 
 #### プロデューサーアプリケーション
-`sbt "runMain applications.streams.producer.SampleImpressionStreamProducerApp"`
+```
+sbt "runMain applications.streams.producer.SampleImpressionStreamProducerApp"
+````
 
 #### コンシューマアプリケーション
-`sbt "runMain applications.streams.consumer.SampleImpressionStreamConsumerApp"`
+```
+sbt "runMain applications.streams.consumer.SampleImpressionStreamConsumerApp"
+```
 
 #### シャード分割
 TODO
@@ -29,4 +35,4 @@ TODO
 TODO 
 
 #### UDF デプロイ
-`ascli udf-put aerospike/udf/ad_set.lua`
+`ascli udf-put src/aerospike/udf/ad_set.lua`
