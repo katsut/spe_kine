@@ -1,7 +1,6 @@
-## kinesis お試し用
+## kinesis + aerospike お試し
 
 ### aerospike setup
-(入れるのが面倒な人はDev環境を使ってどうぞ)
 
 #### aeorspike toolsをインストール
 [ascliのダウンロードページ](http://www.aerospike.jp/download/tools/3.7.5/)からmac用をダウンロードしてインストール
@@ -10,13 +9,26 @@
 #### ローカルのaerospike serverを用意
 [docker](https://docs.docker.com/docker-for-mac/)をインストールして起動しておく
 
+プロジェクトルートで以下を実行
 ```
-export AEROSPIKE_CONF="`pwd`/src/aerospike/conf"
-export AEROSPIKE_DATA="`pwd`/data"
-docker run -ti --rm -v "${AEROSPIKE_CONF}:/opt/aerospike/etc/conf" -v "${AEROSPIKE_DATA}:/opt/aerospike/etc/data" --name aerospike -p 3000:3000 -p 3001:3001 -p 3002:3002 -p 3003:3003 aerospike/aerospike-server /usr/bin/asd --foreground --config-file /opt/aerospike/etc/conf/aerospike.conf
+docker run -ti --rm -v $(pwd)/src/aerospike/conf:/opt/aerospike/etc/conf -v "$(pwd)/data:/opt/aerospike/etc/data" --name aerospike -p 3000:3000 -p 3001:3001 -p 3002:3002 -p 3003:3003 aerospike/aerospike-server /usr/bin/asd --foreground --config-file /opt/aerospike/etc/conf/aerospike.conf
 ```
 
-### aws kinesis stream applications run
+#### UDF デプロイ
+```
+デプロイ
+ascli udf-put src/aerospike/udf/ad_set.lua
+
+デプロイ確認
+ascli udf-list
+
+UDF実行
+TODO 複数パラメータの渡し方がわからない
+ascli udf-record-apply test ad 1 ad_set modify 1 "2016-01-01 00:00:00.000" "0000000000"
+```
+
+
+### kinesis stream applications run
 
 #### プロデューサーアプリケーション
 ```
@@ -28,11 +40,11 @@ sbt "runMain applications.streams.producer.SampleImpressionStreamProducerApp"
 sbt "runMain applications.streams.consumer.SampleImpressionStreamConsumerApp"
 ```
 
+### kinesis stream シャード管理
+
 #### シャード分割
 TODO
 
 #### シャードマージ
 TODO 
 
-#### UDF デプロイ
-`ascli udf-put src/aerospike/udf/ad_set.lua`
