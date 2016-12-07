@@ -12,6 +12,11 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "amazon-kinesis-producer" % "0.12.1",
   "com.aerospike" % "aerospike-client" % "latest.integration",
   "com.github.nscala-time" %% "nscala-time" % "2.8.0",
-  "org.json4s" %% "json4s-jackson" % "3.2.2",
+  "org.json4s" %% "json4s-jackson" % "latest.integration",
   "com.typesafe" % "config" % "1.3.1"
+)
+
+libraryDependencies ++= Seq(
+  "org.specs2" %% "specs2-core" % "3.7" % "test" ,
+  "org.specs2" %% "specs2-mock" % "3.7" % "test"
 )

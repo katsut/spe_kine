@@ -1,6 +1,6 @@
 package applications.streams.producer
 
-import models.SampleImpressionLog
+import models.ImpressionLog
 import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.concurrent.Future
@@ -30,7 +30,7 @@ object SampleImpressionStreamProducerApp extends KinesisProducerApp {
       val now = DateTime.now(jst).toString
       Future {
         (1 to PUT_PAR_SEC par) foreach { j =>
-          val record = SampleImpressionLog(
+          val record = ImpressionLog(
             now,
             users(i * j % usersLength),
             adIds(i * j % adIdLength)

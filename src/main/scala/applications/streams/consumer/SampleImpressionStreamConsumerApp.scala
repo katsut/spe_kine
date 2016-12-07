@@ -14,7 +14,7 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.{IRecordProcessor
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{InitialPositionInStream, KinesisClientLibConfiguration, ShutdownReason, Worker}
 import com.amazonaws.services.kinesis.model.Record
 import commons.{AWSSupport, AerospikeSupport}
-import models.SampleImpressionLog
+import models.ImpressionLog
 import org.json4s._
 import org.json4s.jackson.Serialization
 import org.json4s.jackson.Serialization.read
@@ -67,7 +67,7 @@ object SampleImpressionStreamConsumerApp extends AWSSupport with AerospikeSuppor
           rec -> new String(rec.getData.array)
         } map { case (rec, str) =>
           println(s"### consumer parse : $str")
-          rec -> read[SampleImpressionLog](str)
+          rec -> read[ImpressionLog](str)
         } foreach { case (r, log) =>
           println(s"### consumer aerospike modify : $log")
           client.execute(policy.writes.default, new Key("test", "ad", log.adId), "ad_set", "modify", Value.get(log.adId), Value.get(log.time), Value.get(log.user))
