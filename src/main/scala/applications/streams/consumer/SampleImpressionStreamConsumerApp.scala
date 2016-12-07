@@ -8,7 +8,16 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.{IRecordProcessor, IRecordProcessorCheckpointer, IRecordProcessorFactory}
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{InitialPositionInStream, KinesisClientLibConfiguration, ShutdownReason, Worker}
 import com.amazonaws.services.kinesis.model.Record
-import commons.AWSSupport
+import com.aerospike.client.{Key, Value}
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.kinesis.clientlibrary.interfaces.{IRecordProcessor, IRecordProcessorCheckpointer, IRecordProcessorFactory}
+import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{InitialPositionInStream, KinesisClientLibConfiguration, ShutdownReason, Worker}
+import com.amazonaws.services.kinesis.model.Record
+import commons.{AWSSupport, AerospikeSupport}
+import models.SampleImpressionLog
+import org.json4s._
+import org.json4s.jackson.Serialization
+import org.json4s.jackson.Serialization.read
 
 /**
   * Created by tsuruta on 2016/10/27.
@@ -22,7 +31,9 @@ import commons.AWSSupport
   * シャード数のオートスケール
   *
   */
-object SampleImpressionStreamConsumerApp extends AWSSupport {
+object SampleImpressionStreamConsumerApp extends AWSSupport with AerospikeSupport  {
+
+  implicit val formats = Serialization.formats(NoTypeHints)
 
   def main(args: Array[String]): Unit = {
 
@@ -44,30 +55,32 @@ object SampleImpressionStreamConsumerApp extends AWSSupport {
     new Worker(ProcessorFactory, kinesisConf).run()
   }
 
-}
 
+  object ProcessorFactory extends IRecordProcessorFactory {
+    override protected def createProcessor(): IRecordProcessor = new IRecordProcessor {
 
+      override def initialize(shardId: String): Unit = {}
 
+      override def processRecords(records: util.List[Record], checkpointer: IRecordProcessorCheckpointer): Unit = {
+        import scala.collection.JavaConversions._
+        records map { rec =>
+          rec -> new String(rec.getData.array)
+        } map { case (rec, str) =>
+          println(s"### consumer parse : $str")
+          rec -> read[SampleImpressionLog](str)
+        } foreach { case (r, log) =>
+          println(s"### consumer aerospike modify : $log")
+          client.execute(policy.writes.default, new Key("test", "ad", log.adId), "ad_set", "modify", Value.get(log.adId), Value.get(log.time), Value.get(log.user))
+        }
 
-object ProcessorFactory extends IRecordProcessorFactory {
-  override protected def createProcessor(): IRecordProcessor = new IRecordProcessor {
-
-    override def initialize(shardId: String): Unit = {}
-
-    override def processRecords(records: util.List[Record], checkpointer: IRecordProcessorCheckpointer): Unit = {
-      import scala.collection.JavaConversions._
-      records map { r =>
-        r -> new String(r.getData.array)
-      } foreach { case (r, s) =>
-        println(s)
+        checkpointer.checkpoint()
       }
 
-      checkpointer.checkpoint()
+      override def shutdown(checkpointer: IRecordProcessorCheckpointer, reason: ShutdownReason): Unit = {}
+
     }
-
-    override def shutdown(checkpointer: IRecordProcessorCheckpointer, reason: ShutdownReason): Unit = {}
-
   }
-}
 
+
+}
 
